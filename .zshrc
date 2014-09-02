@@ -1,6 +1,11 @@
 #####################################################################
 # environment
 #####################################################################
+# imported from oh-my-zsh
+export ZSH=$HOME/.oh-my-zsh
+# environment variables and zsh plugins
+plugins=(git)
+source $ZSH/oh-my-zsh.sh
 
 export EDITOR=vim
 export LANG=en_US.UTF-8
