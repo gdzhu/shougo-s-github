@@ -2,6 +2,8 @@
 " unite.vim
 "
 
+let g:unite_enable_auto_select = 0
+
 " For unite-menu.
 let g:unite_source_menu_menus = {}
 
@@ -85,15 +87,10 @@ let g:unite_source_alias_aliases.scriptnames = {
 
 autocmd MyAutoCmd FileType unite call s:unite_my_settings()
 
-let g:unite_ignore_source_files = ['function.vim', 'command.vim']
+let g:unite_ignore_source_files = []
 
 call unite#custom#profile('action', 'context', {
       \ 'start_insert' : 1
-      \ })
-
-" Set "-no-quit" automatically in grep unite source.
-call unite#custom#profile('source/grep', 'context', {
-      \ 'no_quit' : 1
       \ })
 
 " migemo.
@@ -105,7 +102,8 @@ call unite#custom#source(
       \ ['converter_relative_word', 'matcher_fuzzy'])
 call unite#custom#source(
       \ 'file_mru', 'matchers',
-      \ ['matcher_project_files', 'matcher_fuzzy', 'matcher_hide_hidden_files'])
+      \ ['matcher_project_files', 'matcher_fuzzy',
+      \  'matcher_hide_hidden_files', 'matcher_hide_current_file'])
 " call unite#custom#source(
 "       \ 'file', 'matchers',
 "       \ ['matcher_fuzzy', 'matcher_hide_hidden_files'])
@@ -113,6 +111,7 @@ call unite#custom#source(
       \ 'file_rec,file_rec/async,file_rec/git,file_mru', 'converters',
       \ ['converter_file_directory'])
 call unite#filters#sorter_default#use(['sorter_rank'])
+" call unite#filters#sorter_default#use(['sorter_length'])
 "}}}
 
 function! s:unite_my_settings() "{{{
@@ -139,6 +138,8 @@ function! s:unite_my_settings() "{{{
   nnoremap <silent><buffer> <Tab>     <C-w>w
   nnoremap <silent><buffer><expr> l
         \ unite#smart_map('l', unite#do_action('default'))
+  nnoremap <silent><buffer><expr> P
+        \ unite#smart_map('P', unite#do_action('insert'))
 
   let unite = unite#get_current_unite()
   if unite.profile_name ==# '^search'
@@ -149,19 +150,20 @@ function! s:unite_my_settings() "{{{
 
   nnoremap <silent><buffer><expr> cd     unite#do_action('lcd')
   nnoremap <silent><buffer><expr> !     unite#do_action('start')
-  nnoremap <buffer><expr> S      unite#mappings#set_current_filters(
-        \ empty(unite#mappings#get_current_filters()) ? ['sorter_reverse'] : [])
-
-  nnoremap <silent><buffer><expr> p
-        \ empty(filter(range(1, winnr('$')),
-        \ 'getwinvar(v:val, "&previewwindow") != 0')) ?
-        \ unite#do_action('preview') : ":\<C-u>pclose!\<CR>"
+  nnoremap <buffer><expr> S
+        \ unite#mappings#set_current_sorters(
+        \  empty(unite#mappings#get_current_sorters()) ?
+        \   ['sorter_reverse'] : [])
+  nnoremap <buffer><expr> cof
+        \ unite#mappings#set_current_matchers(
+        \ empty(unite#mappings#get_current_matchers()) ?
+        \ ['matcher_fuzzy'] : [])
+  nmap <buffer> x     <Plug>(unite_quick_match_jump)
 endfunction"}}}
 
 " Default configuration.
 let default_context = {
       \ 'vertical' : 0,
-      \ 'cursor_line_highlight' : 'TabLineSel',
       \ 'short_source_names' : 1,
       \ }
 
@@ -169,11 +171,8 @@ let default_context = {
 
 if IsWindows()
 else
-  " Like Textmate icons.
-  let default_context.marked_icon = '✗'
-
   " Prompt choices.
-  let default_context.prompt = '» '
+  " let default_context.prompt = '» '
 endif
 
 call unite#custom#profile('default', 'context', default_context)
@@ -182,24 +181,29 @@ if executable('ag')
   " Use ag in unite grep source.
   let g:unite_source_grep_command = 'ag'
   let g:unite_source_grep_default_opts =
-        \ '-i --line-numbers --nocolor --nogroup --hidden --ignore ' .
+        \ '-i --vimgrep --hidden --ignore ' .
         \  '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
   let g:unite_source_grep_recursive_opt = ''
 elseif executable('pt')
   let g:unite_source_grep_command = 'pt'
-  let g:unite_source_grep_default_opts = '-i --nogroup --nocolor'
+  let g:unite_source_grep_default_opts = '--nogroup --nocolor'
   let g:unite_source_grep_recursive_opt = ''
 elseif executable('jvgrep')
   " For jvgrep.
   let g:unite_source_grep_command = 'jvgrep'
   let g:unite_source_grep_default_opts = '-i --exclude ''\.(git|svn|hg|bzr)'''
   let g:unite_source_grep_recursive_opt = '-R'
-elseif executable('ack-grep')
-  " For ack.
-  let g:unite_source_grep_command = 'ack-grep'
-  let g:unite_source_grep_default_opts = '-i --no-heading --no-color -a'
-  let g:unite_source_grep_recursive_opt = ''
 endif
+
+" if executable('ack')
+"   " For ack.
+"   let g:unite_source_grep_command = 'ack'
+"   let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
+"   let g:unite_source_grep_recursive_opt = ''
+" endif
+
+" let g:unite_source_rec_async_command = 'pt --nogroup --nocolor -S -g .'
+" let g:unite_source_rec_async_command = 'ag --follow --nocolor --nogroup --hidden -g ""'
 
 let g:unite_build_error_icon    = '~/.vim/signs/err.'
       \ . (IsWindows() ? 'bmp' : 'png')
@@ -207,4 +211,22 @@ let g:unite_build_warning_icon  = '~/.vim/signs/warn.'
       \ . (IsWindows() ? 'bmp' : 'png')
 
 let g:unite_source_rec_max_cache_files = -1
+
+" My custom split action
+let s:my_split = {'is_selectable': 1}
+function! s:my_split.func(candidate)
+  let split_action = 'vsplit'
+  if winwidth(winnr('#')) <= 2 * (&tw ? &tw : 80)
+    let split_action = 'split'
+  endif
+  call unite#take_action(split_action, a:candidate)
+endfunction
+call unite#custom_action('openable', 'context_split', s:my_split)
+unlet s:my_split
+
+nnoremap <silent> <Leader>st :NeoCompleteIncludeMakeCache<CR>
+            \ :UniteWithCursorWord -immediately -sync
+            \ -default-action=context_split tag/include<CR>
+nnoremap <silent> [Space]n  :UniteNext<CR>
+nnoremap <silent> [Space]p  :UnitePrevious<CR>
 

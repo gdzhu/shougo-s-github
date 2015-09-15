@@ -6,7 +6,7 @@
 set autoindent smartindent
 
 augroup MyAutoCmd
-  autocmd FileType,Syntax * call s:my_on_filetype()
+  autocmd FileType,Syntax,BufEnter,BufWinEnter * call s:my_on_filetype()
 
   " Enable gauche syntax.
   autocmd FileType scheme nested let b:is_gauche=1 | setlocal lispwords=define |
@@ -25,22 +25,15 @@ augroup MyAutoCmd
 
   " Enable omni completion.
   " autocmd FileType ada setlocal omnifunc=adacomplete#Complete
-  " autocmd FileType c setlocal omnifunc=ccomplete#Complete
+  autocmd FileType c setlocal omnifunc=
   autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
   autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
   autocmd FileType java setlocal omnifunc=javacomplete#Complete
   autocmd FileType php setlocal omnifunc=phpcomplete#CompletePHP
-  if has('python3')
-    autocmd FileType python setlocal omnifunc=python3complete#Complete
-  else
-    autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-  endif
-  "autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
   "autocmd FileType sql setlocal omnifunc=sqlcomplete#Complete
   autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
   autocmd FileType python setlocal foldmethod=indent
-  " autocmd FileType vim setlocal foldmethod=syntax
 
   " Update filetype.
   autocmd BufWritePost *
@@ -89,6 +82,9 @@ let g:java_highlight_functions=1
 " JavaScript
 let g:SimpleJsIndenter_BriefMode = 1
 let g:SimpleJsIndenter_CaseIndentLevel = -1
+
+" Markdown
+let g:markdown_fenced_languages = []
 
 " Go
 if $GOROOT != ''
@@ -157,6 +153,7 @@ function! s:my_on_filetype() "{{{
   if !&l:modifiable
     setlocal nofoldenable
     setlocal foldcolumn=0
+    silent! IndentLinesDisable
 
     if v:version >= 703
       setlocal colorcolumn=

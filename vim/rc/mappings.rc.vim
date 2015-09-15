@@ -69,8 +69,10 @@ nnoremap <SID>(command-line-norange) q:<C-u>
 nmap ;;  <SID>(command-line-enter)
 xmap ;;  <SID>(command-line-enter)
 
-autocmd MyAutoCmd CmdwinEnter * call s:init_cmdwin()
-autocmd MyAutoCmd CmdwinLeave * let g:neocomplcache_enable_auto_select = 1
+autocmd MyAutoCmd CmdwinEnter *
+      \ call s:init_cmdwin()
+autocmd MyAutoCmd CmdwinLeave *
+      \ let g:neocomplcache_enable_auto_select = 1
 
 function! s:init_cmdwin()
   let g:neocomplcache_enable_auto_select = 0
@@ -86,10 +88,12 @@ function! s:init_cmdwin()
 
   " Completion.
   inoremap <buffer><expr><TAB>  pumvisible() ?
-        \ "\<C-n>" : <SID>check_back_space() ? "\<TAB>" : "\<C-x>\<C-u>\<C-p>"
+        \ "\<C-n>" : <SID>check_back_space() ?
+        \            "\<TAB>" : "\<C-x>\<C-u>\<C-p>"
 
   " Remove history lines.
-  silent execute printf("1,%ddelete _", min([&history - 20, line("$") - 20]))
+  silent execute printf("1,%ddelete _",
+        \ min([&history - 20, line("$") - 20]))
   call cursor(line('$'), 0)
 
   startinsert!
@@ -97,7 +101,6 @@ endfunction"}}}
 
 " [Space]: Other useful commands "{{{
 " Smart space mapping.
-" Notice: when starting other <Space> mappings in noremap, disappeared [Space].
 nmap  <Space>   [Space]
 xmap  <Space>   [Space]
 nnoremap  [Space]   <Nop>
@@ -106,7 +109,7 @@ xnoremap  [Space]   <Nop>
 " Toggle relativenumber.
 nnoremap <silent> [Space].
       \ :<C-u>call ToggleOption('relativenumber')<CR>
-nnoremap <silent> [Space]p
+nnoremap <silent> [Space]m
       \ :<C-u>call ToggleOption('paste')<CR>:set mouse=<CR>
 " Toggle highlight.
 nnoremap <silent> [Space]/
@@ -150,7 +153,8 @@ function! s:cd_buffer_dir() "{{{
 endfunction"}}}
 
 " Easily syntax change.
-nnoremap <silent> [Space]ft :<C-u>Unite -start-insert filetype filetype/new<CR>
+nnoremap <silent> [Space]ft
+      \ :<C-u>Unite -start-insert filetype filetype/new<CR>
 
 " Exchange gj and gk to j and k. "{{{
 command! -nargs=? -bar -bang ToggleGJK call s:ToggleGJK()
@@ -256,7 +260,6 @@ function! s:PreviousWindowOrTab()
 endfunction
 
 " Split nicely."{{{
-command! SplitNicely call s:split_nicely()
 function! s:split_nicely()
   " Split nicely.
   if winwidth(0) > 2 * &winwidth
@@ -372,17 +375,13 @@ nnoremap M  m
 "}}}
 
 " Smart <C-f>, <C-b>.
-nnoremap <silent> <C-f> <C-f>
-nnoremap <silent> <C-b> <C-b>
+noremap <expr> <C-f> max([winheight(0) - 2, 1])
+      \ . "\<C-d>" . (line('w$') >= line('$') ? "L" : "H")
+noremap <expr> <C-b> max([winheight(0) - 2, 1])
+      \ . "\<C-u>" . (line('w0') <= 1 ? "H" : "L")
 
 " Disable ZZ.
 nnoremap ZZ  <Nop>
-
-" Like gv, but select the last changed text.
-" nnoremap gc  `[v`]
-" Specify the last changed text as {motion}.
-" vnoremap <silent> gc  :<C-u>normal gc<CR>
-" onoremap <silent> gc  :<C-u>normal gc<CR>
 
 " Auto escape / and ? in search command.
 cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
@@ -468,8 +467,6 @@ endfunction "}}}
 
 " Select rectangle.
 xnoremap r <C-v>
-" Select until end of current line in visual mode.
-xnoremap v $h
 
 " Paste next line.
 nnoremap <silent> gp o<ESC>p^
@@ -508,7 +505,8 @@ function! s:sticky_func()
   let sticky_table = {
         \',' : '<', '.' : '>', '/' : '?',
         \'1' : '!', '2' : '@', '3' : '#', '4' : '$', '5' : '%',
-        \'6' : '^', '7' : '&', '8' : '*', '9' : '(', '0' : ')', '-' : '_', '=' : '+',
+        \'6' : '^', '7' : '&', '8' : '*', '9' : '(', '0' : ')',
+        \ '-' : '_', '=' : '+',
         \';' : ':', '[' : '{', ']' : '}', '`' : '~', "'" : "\"", '\' : '|',
         \}
   let special_table = {
@@ -538,8 +536,8 @@ endfunction
 
 " Easy escape."{{{
 inoremap jj           <ESC>
-" inoremap <expr> j       getline('.')[col('.') - 2] ==# 'j' ? "\<BS>\<ESC>" : 'j'
-cnoremap <expr> j       getcmdline()[getcmdpos()-2] ==# 'j' ? "\<BS>\<C-c>" : 'j'
+cnoremap <expr> j
+      \ getcmdline()[getcmdpos()-2] ==# 'j' ? "\<BS>\<C-c>" : 'j'
 onoremap jj           <ESC>
 
 inoremap j<Space>     j
@@ -618,3 +616,17 @@ endfunction
 nnoremap ;n  ;
 nnoremap ;m  ,
 
+" Replace word under cursor (which should be a GitHub username)
+" with some user info ("Full Name <email@address>").
+" If info cout not be found, "Not found" is inserted.
+function! <SID>InsertGitHubUserInfo()
+    let user = expand('<cWORD>')
+    " final slice is to remove ending newline
+    let info = system('github_user_info ' . user . ' 2> /dev/null')[:-2]
+    if v:shell_error
+        let info = 'Not found'
+    endif
+    execute "normal! diWa" . info . "\<esc>"
+endfunction
+
+nnoremap <silent> <leader>gu :call <SID>InsertGitHubUserInfo()<cr>

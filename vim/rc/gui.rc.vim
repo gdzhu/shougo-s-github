@@ -26,6 +26,11 @@ if has('win32') || has('win64')
   " Number of pixel lines inserted between characters.
   set linespace=2
 
+  if has('patch-7.4.394')
+    " Use DirectWrite
+    set renderoptions=type:directx,gammma:2.2,mode:3
+  endif
+
   " Toggle font setting.
   function! FontToggle()
     if &guifont=~ '^VL Gothic:'
@@ -58,8 +63,8 @@ elseif has('mac')
   set guifont=Osaka－等幅:h14
 else
   " For Linux.
-  set guifontwide=VL\ Gothic\ 11
-  set guifont=Courier\ 10\ Pitch\ 11
+  set guifontwide=VL\ Gothic\ 13
+  set guifont=Courier\ 10\ Pitch\ 13.5
 endif"}}}
 
 "---------------------------------------------------------------------------
@@ -79,9 +84,9 @@ if has('win32') || has('win64')
   nnoremap TT     :<C-u>TransparencyToggle<CR>
 else
   " Width of window.
-  set columns=151
+  set columns=170
   " Height of window.
-  set lines=41
+  set lines=40
 endif
 
 " Don't override colorscheme.
@@ -110,7 +115,8 @@ endif
 "---------------------------------------------------------------------------
 " Mouse:"{{{
 "
-set mousemodel=extend
+set mouse=
+set mousemodel=
 
 " Don't focus the window when the mouse pointer is moved.
 set nomousefocus

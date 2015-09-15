@@ -17,7 +17,15 @@ let g:netrw_list_hide= '*.swp'
 set browsedir=current
 "}}}
 
-if neobundle#tap('neocomplete.vim') "{{{
+if neobundle#tap('deoplete.nvim') && has('nvim') "{{{
+  let g:deoplete#enable_at_startup = 1
+  let neobundle#hooks.on_source =
+        \ '~/.vim/rc/plugins/deoplete.rc.vim'
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('neocomplete.vim') && has('lua') "{{{
   let g:neocomplete#enable_at_startup = 1
   let neobundle#hooks.on_source =
         \ '~/.vim/rc/plugins/neocomplete.rc.vim'
@@ -72,41 +80,52 @@ if neobundle#tap('unite.vim') "{{{
   nmap    ;u [unite]
   xmap    ;u [unite]
 
-  nnoremap <expr><silent> ;b
-        \ ":\<C-u>Unite -buffer-name=build". tabpagenr() ." -no-quit build\<CR>"
-  nnoremap <expr><silent> ;t
-        \ ":\<C-u>Unite -buffer-name=test". tabpagenr() ." -no-quit build::test\<CR>"
+  nnoremap <silent> ;b
+        \ :<C-u>Unite -buffer-name=build`tabpagenr()` -no-quit build<CR>
+  nnoremap <silent> ;t
+        \ :<C-u>Unite -buffer-name=test`tabpagenr()` -no-quit build::test<CR>
   nnoremap <silent> ;o
         \ :<C-u>Unite outline -no-start-insert -resume<CR>
   nnoremap <silent> ;t
         \ :<C-u>UniteWithCursorWord -buffer-name=tag tag tag/include<CR>
   xnoremap <silent> ;r
-        \ d:<C-u>Unite -buffer-name=register register history/yank<CR>
+        \ d:<C-u>Unite -buffer-name=register
+        \ -default-action=append register history/yank<CR>
   nnoremap <silent> <C-k>
         \ :<C-u>Unite change jump<CR>
-  nnoremap <silent><expr> ;g
-        \ ":\<C-u>Unite grep -buffer-name=grep%".tabpagenr()." -auto-preview -no-split -no-empty -resume\<CR>"
+  nnoremap <silent> ;g
+        \ :<C-u>Unite grep -buffer-name=grep`tabpagenr()`
+        \ -auto-preview -no-split -no-empty -resume<CR>
   nnoremap <silent> ;r
-        \ :<C-u>Unite -buffer-name=register register history/yank<CR>
+        \ :<C-u>Unite -buffer-name=register
+        \ -default-action=append register history/yank<CR>
 
   " <C-t>: Tab pages
-  nnoremap <silent><expr> <C-t>
-        \ ":\<C-u>Unite -auto-resize -select=".(tabpagenr()-1)." tab\<CR>"
+  nnoremap <silent> <C-t>
+        \ :<C-u>Unite -auto-resize -select=`tabpagenr()-1` tab<CR>
 
   nnoremap <silent> [Window]s
         \ :<C-u>Unite -buffer-name=files -no-split -multi-line -unique -silent
         \ jump_point file_point file_mru
-        \ file_rec/git buffer_tab:- file file/new<CR>
+        \ `finddir('.git', ';') != '' ? 'file_rec/git' : 'file_rec/async'`
+        \ buffer_tab:- file file/new<CR>
 
-  nnoremap <expr><silent> [Window]r  ":\<C-u>Unite -start-insert ref/".ref#detect()."\<CR>"
-  nnoremap <silent> [Window]<Space>  :<C-u>Unite -buffer-name=files file_rec:~/.vim/rc<CR>
-  nnoremap <silent> [Window]n  :<C-u>Unite -default-action=lcd neobundle:!<CR>
+  nnoremap <silent> [Window]r
+        \ :<C-u>Unite -start-insert ref/`ref#detect()`<CR>
+  nnoremap <silent> [Window]<Space>
+        \ :<C-u>Unite -buffer-name=files -path=~/.vim/rc file_rec<CR>
+  nnoremap <silent> [Window]n
+        \ :<C-u>Unite -start-insert -default-action=lcd neobundle<CR>
+  nnoremap <silent> [Window]g
+        \ :<C-u>Unite -start-insert ghq<CR>
+  nnoremap <silent> [Window]t
+        \ :<C-u>Unite -start-insert tig<CR>
 
   nnoremap <silent> [Window]f
         \ :<C-u>Unite <CR>
 
-  nnoremap <silent> [Window]w
-        \ :<C-u>Unite window<CR>
+  nnoremap <silent> <C-w>
+        \ :<C-u>Unite window:all:no-current<CR>
   nnoremap <silent> [Space]b
         \ :<C-u>UniteBookmarkAdd<CR>
 
@@ -117,7 +136,8 @@ if neobundle#tap('unite.vim') "{{{
   " Jump.
   " nnoremap [Tag]t  g<C-]>
   nnoremap <silent><expr> [Tag]t  &filetype == 'help' ?  "g\<C-]>" :
-        \ ":\<C-u>UniteWithCursorWord -buffer-name=tag -immediately tag tag/include\<CR>"
+        \ ":\<C-u>UniteWithCursorWord -buffer-name=tag -immediately
+        \  tag tag/include\<CR>"
   nnoremap <silent><expr> [Tag]p  &filetype == 'help' ?
         \ ":\<C-u>pop\<CR>" : ":\<C-u>Unite jump\<CR>"
   "}}}
@@ -129,27 +149,21 @@ if neobundle#tap('unite.vim') "{{{
   nnoremap <silent> g<C-h>  :<C-u>UniteWithCursorWord help<CR>
 
   " Search.
-  nnoremap <silent><expr> /
-        \ ":\<C-u>Unite -buffer-name=search%".bufnr('%')." -start-insert line:forward:wrap\<CR>"
-  nnoremap <expr> g/  <SID>smart_search_expr('g/',
-        \ ":\<C-u>Unite -buffer-name=search -start-insert line_migemo\<CR>")
-  nnoremap <silent><expr> ?
-        \ ":\<C-u>Unite -buffer-name=search%".bufnr('%')." -start-insert line:backward\<CR>"
-  nnoremap <silent><expr> *
-        \ ":\<C-u>UniteWithCursorWord -buffer-name=search%".bufnr('%')." line:forward:wrap\<CR>"
+  nnoremap <silent> /
+        \ :<C-u>Unite -buffer-name=search%`bufnr('%')`
+        \ -start-insert line:forward:wrap<CR>
+  nnoremap <silent> ?
+        \ :<C-u>Unite -buffer-name=search%`bufnr('%')`
+        \ -start-insert line:backward<CR>
+  nnoremap <silent> *
+        \ :<C-u>UniteWithCursorWord -buffer-name=search%`bufnr('%')`
+        \ line:forward:wrap<CR>
   nnoremap [Alt]/       /
   nnoremap [Alt]?       ?
-  cnoremap <expr><silent><C-g>        (getcmdtype() == '/') ?
-        \ "\<ESC>:Unite -buffer-name=search line:forward:wrap -input=".getcmdline()."\<CR>" : "\<C-g>"
 
-  function! s:smart_search_expr(expr1, expr2)
-    return line('$') > 5000 ?  a:expr1 : a:expr2
-  endfunction
-
-  nnoremap <silent><expr> n
-        \ ":\<C-u>UniteResume search%".bufnr('%')." -no-start-insert\<CR>"
-
-  nnoremap <silent> <C-w>  :<C-u>Unite -auto-resize window/gui<CR>
+  nnoremap <silent> n
+        \ :<C-u>UniteResume search%`bufnr('%')`
+        \  -no-start-insert -force-redraw<CR>
 
   let neobundle#hooks.on_source =
         \ '~/.vim/rc/plugins/unite.rc.vim'
@@ -169,14 +183,13 @@ if neobundle#tap('CamelCaseMotion') "{{{
 endif "}}}
 
 if neobundle#tap('vim-smartchr') "{{{
-  let g:neocomplete#enable_at_startup = 1
   let neobundle#hooks.on_source =
         \ '~/.vim/rc/plugins/smartchr.rc.vim'
 
   call neobundle#untap()
 endif "}}}
 
-if neobundle#tap('quickrun.vim') "{{{
+if neobundle#tap('vim-quickrun') "{{{
   nmap <silent> <Leader>r <Plug>(quickrun)
 
   call neobundle#untap()
@@ -225,6 +238,7 @@ endif "}}}
 
 if neobundle#tap('eskk.vim') "{{{
   imap <C-j>     <Plug>(eskk:toggle)
+  cmap <C-j>     <Plug>(eskk:toggle)
 
   let neobundle#hooks.on_source =
         \ '~/.vim/rc/plugins/eskk.rc.vim'
@@ -273,6 +287,7 @@ if neobundle#tap('vim-operator-surround') "{{{
   nmap <silent>sa <Plug>(operator-surround-append)a
   nmap <silent>sd <Plug>(operator-surround-delete)a
   nmap <silent>sr <Plug>(operator-surround-replace)a
+  nmap <silent>sc <Plug>(operator-surround-replace)a
 
   call neobundle#untap()
 endif "}}}
@@ -334,9 +349,10 @@ if neobundle#tap('concealedyank.vim') "{{{
   call neobundle#untap()
 endif "}}}
 
-if neobundle#tap('vim-vcs') "{{{
-  nnoremap <silent> [Space]gs  :<C-u>Vcs status<CR>
-  nnoremap <silent> [Space]gc  :<C-u>Vcs commit<CR>
+if neobundle#tap('vim-gita') "{{{
+  nnoremap <silent> [Space]gs  :<C-u>Gita status<CR>
+  nnoremap <silent> [Space]gc  :<C-u>Gita commit<CR>
+  nnoremap <silent> [Space]gd  :<C-u>Gita diff<CR>
 
   call neobundle#untap()
 endif "}}}
@@ -358,14 +374,7 @@ if neobundle#tap('matchit.zip') "{{{
   call neobundle#untap()
 endif "}}}
 
-if neobundle#tap('vim-conque') "{{{
-  let g:ConqueTerm_EscKey = '<Esc>'
-  let g:ConqueTerm_PyVersion = 3
-
-  call neobundle#untap()
-endif "}}}
-
-if neobundle#tap('fontzoom.vim') "{{{
+if neobundle#tap('vim-fontzoom') "{{{
   nmap + <Plug>(fontzoom-larger)
   nmap _ <Plug>(fontzoom-smaller)
 
@@ -407,13 +416,6 @@ if neobundle#tap('vim-fullscreen') "{{{
   call neobundle#untap()
 endif "}}}
 
-if neobundle#tap('vim-vimlint') "{{{
-  let g:vimlint#config = { 'EVL103' : 1  }
-  let g:vimlint#config.EVL102 = { 'l:_' : 1 }
-
-  call neobundle#untap()
-endif "}}}
-
 if neobundle#tap('vim-textobj-user') "{{{
   omap ab <Plug>(textobj-multiblock-a)
   omap ib <Plug>(textobj-multiblock-i)
@@ -442,6 +444,61 @@ endif "}}}
 if neobundle#tap('vim-jplus') "{{{
   nmap J <Plug>(jplus)
   vmap J <Plug>(jplus)
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('indentLine') "{{{
+  let g:indentLine_faster = 1
+  nmap <silent><Leader>i :<C-u>IndentLinesToggle<CR>
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('vim-themis') "{{{
+  " Set to $PATH.
+  let s:bin = neobundle#get('vim-themis').rtp . 'bin'
+  let $PATH = neobundle#util#join_envpath(
+        \ neobundle#util#uniq(insert(
+        \    neobundle#util#split_envpath($PATH), s:bin)), $PATH, s:bin)
+  let $THEMIS_HOME = neobundle#get('vim-themis').rtp
+  let $THEMIS_VIM = printf('%s/%s',
+        \ fnamemodify(exepath(v:progpath), ':h'),
+        \ (has('nvim') ? 'nvim' : 'vim'))
+
+  unlet s:bin
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('vim-gista') "{{{
+  let g:gista#github_user = 'Shougo'
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('jedi-vim') "{{{
+  autocmd MyAutoCmd FileType python
+        \ if has('python') || has('python3') |
+        \   setlocal omnifunc=jedi#completions |
+        \ else |
+        \   setlocal omnifunc= |
+        \ endif
+  let g:jedi#completions_enabled = 0
+  let g:jedi#auto_vim_configuration = 0
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('vim-expand-region') "{{{
+  xmap v <Plug>(expand_region_expand)
+  xmap <C-v> <Plug>(expand_region_shrink)
+
+  call neobundle#untap()
+endif "}}}
+
+if neobundle#tap('racer') "{{{
+  let $RUST_SRC_PATH = expand('~/src/rust/src')
 
   call neobundle#untap()
 endif "}}}

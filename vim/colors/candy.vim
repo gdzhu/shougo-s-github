@@ -40,8 +40,8 @@ highlight DiffDelete   gui=NONE guifg=#a0d0ff guibg=#0020a0
 highlight DiffAdd      gui=NONE guifg=#a0d0ff guibg=#0020a0
 
 " Cursor
-highlight Cursor       gui=NONE guifg=#00ffff guibg=#008070
-highlight CursorLine   gui=NONE guifg=NONE    guibg=#555555
+highlight Cursor       gui=NONE guifg=NONE guibg=#606060
+highlight CursorLine   gui=NONE guifg=NONE guibg=#444444
 highlight lCursor      gui=NONE guifg=NONE guibg=#80403f
 highlight CursorIM     gui=NONE guifg=NONE guibg=#bb00aa
 
@@ -51,7 +51,7 @@ highlight FoldColumn   gui=NONE guifg=#40c0ff guibg=#2c2c2c
 
 " Other
 highlight Directory    gui=NONE guifg=#40f0d0 guibg=#2c2c2c
-highlight LineNr       gui=NONE guifg=#c0c0c0 guibg=#2c2c2c
+highlight LineNr       gui=NONE guifg=#a0b0c0 guibg=#2c2c2c
 highlight NonText      gui=BOLD guifg=#4080ff guibg=#2c2c2c
 highlight SpecialKey   gui=BOLD guifg=#8080ff guibg=#2c2c2c
 highlight Title        gui=BOLD guifg=#f0f0f8 guibg=#2c2c2c

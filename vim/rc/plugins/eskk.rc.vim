@@ -5,7 +5,7 @@
 let g:eskk#directory = expand('$CACHE/eskk')
 
 let g:eskk#large_dictionary = {
-      \   'path': expand('$CACHE/SKK-JISYO.L'),
+      \   'path': '/usr/share/skk/SKK-JISYO.L',
       \   'sorted': 1,
       \   'encoding': 'euc-jp',
       \}
@@ -36,26 +36,25 @@ let g:eskk#start_completion_length = 2
 "let g:eskk#map_normal_keys = 0
 
 " Toggle debug.
-nnoremap <silent> [Space]ed  :<C-u>call ToggleVariable('g:eskk#debug')<CR>
+nnoremap <silent> [Space]ed
+      \ :<C-u>call ToggleVariable('g:eskk#debug')<CR>
 
 autocmd MyAutoCmd User eskk-initialize-post
-      \ EskkMap -remap jj <Plug>(eskk:disable)<Esc>
+      \ EskkMap -remap jj <ESC>
 
 let g:eskk#dictionary = {
       \   'path': expand('$CACHE/skk-jisyo'),
       \   'sorted': 0,
       \   'encoding': 'utf-8',
       \}
-" Use /bin/sh -c "VTE_CJK_WIDTH=1 gnome-terminal --disable-factory"
-" instead of this settings.
-"if &encoding == 'utf-8' && !has('gui_running')
-" GNOME Terminal only.
+if has('nvim')
+  " For neovim only.
 
-" Use <> instead of ▽.
-"let g:eskk#marker_henkan = '<>'
-" Use >> instead of ▼.
-"let g:eskk#marker_henkan_select = '>>'
-"endif
+  " Use <> instead of ▽.
+  let g:eskk#marker_henkan = '<>'
+  " Use >> instead of ▼.
+  let g:eskk#marker_henkan_select = '>>'
+endif
 
 " Define table.
 autocmd MyAutoCmd User eskk-initialize-pre call s:eskk_initial_pre()

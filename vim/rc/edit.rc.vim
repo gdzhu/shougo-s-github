@@ -32,7 +32,7 @@ set backspace=indent,eol,start
 set showmatch
 " Highlight when CursorMoved.
 set cpoptions-=m
-set matchtime=3
+set matchtime=1
 " Highlight <>.
 set matchpairs+=<:>
 
@@ -72,7 +72,7 @@ set grepprg=grep\ -inH
 set isfname-==
 
 " Reload .vimrc automatically.
-autocmd MyAutoCmd BufWritePost .vimrc,vimrc,*.rc.vim
+autocmd MyAutoCmd BufWritePost .vimrc,vimrc,*.rc.vim,neobundle.toml
       \ NeoBundleClearCache | source $MYVIMRC | redraw
 
 " Keymapping timeout.
@@ -128,3 +128,10 @@ endfunction
 
 " Use autofmt.
 set formatexpr=autofmt#japanese#formatexpr()
+
+" Use blowfish2
+" https://dgl.cx/2014/10/vim-blowfish
+if has('cryptv')
+  " It seems 15ms overhead.
+  " set cryptmethod=blowfish2
+endif
